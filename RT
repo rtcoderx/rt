@@ -115,3 +115,56 @@ accuracy = accuracy_score(y_test, predictions)
 report = classification_report(y_test, predictions)
 print(f'Accuracy: {accuracy:.2f}')
 print('Classification Report:\n', report)
+
+
+# text classification -1
+import pandas as pd
+data = pd.read_csv('https://raw.githubusercontent.com/mohitgupta-omg/Kaggle-SMS-Spam-Collection-Dataset-/master/spam.csv', encoding='latin-1')
+data.head()
+data.drop(['Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1, inplace=True)
+data.columns = ['label', 'text']
+data.head()
+data.isna().sum()
+data.shape
+data['label'].value_counts(normalize = True).plot.bar()
+import nltk
+nltk.download('all')
+text = list(data['text'])
+import re
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
+corpus = []
+for i in range(len(text)):
+    r = re.sub('[^a-zA-Z]', ' ', text[i])
+    r = r.lower()
+    r = r.split()
+    r = [word for word in r if word not in stopwords.words('english')]
+    r = [lemmatizer.lemmatize(word) for word in r]
+    r = ' '.join(r)
+    corpus.append(r)
+data['text'] = corpus
+data.head()
+X = data['text']
+y = data['label']
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=123)
+print('Training Data :', X_train.shape)
+print('Testing Data : ', X_test.shape)
+from sklearn.feature_extraction.text import CountVectorizer
+cv = CountVectorizer()
+X_train_cv = cv.fit_transform(X_train)
+X_train_cv.shape
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression()
+lr.fit(X_train_cv, y_train)
+X_test_cv = cv.transform(X_test)
+predictions = lr.predict(X_test_cv)
+predictions
+# confusion matrix
+import pandas as pd
+from sklearn import metrics
+df = pd.DataFrame(metrics.confusion_matrix(y_test,predictions), index=['ham','spam'], columns=['ham','spam'])
+df
+
+
